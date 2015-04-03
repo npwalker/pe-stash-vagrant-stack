@@ -17,7 +17,7 @@ pe_puppetdb::pe::listen_address: '0.0.0.0'
 puppet_enterprise::profile::puppetdb::listen_address: '0.0.0.0'
 puppet_enterprise::profile::amq::broker::heap_mb: '96'
 puppet_enterprise::profile::master::java_args:
-  Xmx: '256m'
+  Xmx: '128m'
   Xms: '32m'
   'XX:MaxPermSize': '=96m'
   'XX:PermSize': '=96m'
