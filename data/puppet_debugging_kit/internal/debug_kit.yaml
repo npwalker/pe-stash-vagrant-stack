@@ -1,0 +1,6 @@
+---
+debug_kit:
+  nightlies:
+    pe:
+      download_root: http://enterprise.delivery.puppetlabs.net/:series/ci-ready/
+      version_file: LATEST

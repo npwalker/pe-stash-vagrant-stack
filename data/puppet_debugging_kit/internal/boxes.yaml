@@ -1,0 +1,16 @@
+---
+# Boxes from http://int-resources.ops.puppetlabs.net/vagrant/puppetless_boxes/
+# Updated: 2015-01-29
+boxes:
+  'windows-2012r2-x64-virtualbox-nocm': 'http://int-resources.ops.puppetlabs.net/vagrant/puppetless_boxes/win2012r2-x64-virtualbox-nocm.box'
+  'windows-2008r2-x64-virtualbox-nocm': 'http://int-resources.ops.puppetlabs.net/vagrant/puppetless_boxes/windows-server-2008r2-x64-virtualbox-nocm.box'
+  'solaris-10u11-i386-virtualbox-nocm': 'http://int-resources.ops.puppetlabs.net/vagrant/puppetless_boxes/solaris-10u11-i386-virtualbox-nocm.box'
+  'solaris-11.2-i386-virtualbox-nocm': 'http://int-resources.ops.puppetlabs.net/vagrant/puppetless_boxes/solaris-11.2-i386-virtualbox-nocm.box'
+
+  # OS X boxes require VMware Fusion.
+  'osx-108-x64-vf503-nocm': 'http://int-resources.ops.puppetlabs.net/vagrant/puppetless_boxes/osx-108-x64-vf503-nocm.box'
+  # And the 10.9 box requires Fusion 6 or newer.
+  'osx-109-x64-vmware-nocm': 'http://int-resources.ops.puppetlabs.net/vagrant/puppetless_boxes/osx-109-x64-vmware-nocm.box'
+
+  # Ancient Solaris 10 box. Will be removed soon.
+  'solaris-10u11-x64-vb4210': 'http://int-resources.ops.puppetlabs.net/vagrant/puppetless_boxes/solaris-10u11-x64-vb4210.box'

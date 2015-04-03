@@ -1,0 +1,88 @@
+---
+roles:
+  hosts:
+    provisioners:
+      - {type: hosts}
+
+  auto_net:
+    private_networks:
+      - ip: '0.0.0.0'
+        auto_network: true
+
+  puppet_master:
+    provisioners:
+      - type: shell
+        inline: "echo 'nameserver 8.8.8.8' > /etc/resolv.conf"
+      - type: hosts
+      - type: pe_bootstrap
+        role: :master
+
+  stash:
+    provisioners:
+      - type: shell
+        inline: "/opt/puppet/bin/puppet module install puppet-stash --version 1.2.2"
+      - type: shell
+        inline: "/opt/puppet/bin/puppet module install puppetlabs-java --version 1.3.0"
+      - type: shell
+        inline: "/opt/puppet/bin/puppet module install puppetlabs-postgresql --version 4.3.0"
+      - type: shell
+        inline: "rm -f /etc/puppetlabs/puppet/environments/production/manifests/site.pp; cp /vagrant/puppet_code/site.pp /etc/puppetlabs/puppet/environments/production/manifests/site.pp"
+
+  puppet_agent:
+    provisioners:
+      - {type: shell, inline: "echo 'nameserver 8.8.8.8' > /etc/resolv.conf"}
+      - {type: hosts}
+      - type: pe_bootstrap
+        master: 'puppet-master'
+
+  windows_base:
+    communicator: "winrm"
+    forwarded_ports:
+      - { guest: 5985, host: 5986 }
+      - { guest: 3389, host: 3390 }
+ 
+  windows_agent_372:
+    guest: windows
+    private_networks:
+      - {ip: '0.0.0.0', auto_network: true}
+    provisioners:
+      - type: pe_bootstrap
+        version: '3.7.2'
+        master: 'master372-centos'
+
+  posix_agent:
+    private_networks:
+      - {ip: '0.0.0.0', auto_network: true}
+
+  no_pe:
+    provisioners:
+      - {type: shell, inline: "echo 'nameserver 8.8.8.8' > /etc/resolv.conf"}
+      - {type: hosts}
+ 
+  centos: 
+    provisioners:
+      - type: shell
+        inline: 'service iptables stop; chkconfig iptables off;'
+      - type: shell
+        inline: '/usr/bin/yum install telnet -y' 
+      - type: shell
+        inline: '/usr/bin/yum install tree -y' 
+
+  centos7: 
+    provisioners:
+      - type: shell
+        inline: '/usr/bin/yum install telnet -y' 
+      - type: shell
+        inline: '/usr/bin/yum install vim -y' 
+      - type: shell
+        inline: '/usr/bin/yum install tree -y' 
+      - type: shell
+        inline: 'systemctl stop firewalld.service; systemctl disable firewalld.service'
+ 
+  customize_pe_via_hiera: 
+    provisioners:
+      - type: shell
+        inline: 'mkdir -p /var/lib/hiera; cp /vagrant/config/hierafiles/defaults.yaml /var/lib/hiera/defaults.yaml'
+
+  
+

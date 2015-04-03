@@ -1,0 +1,5 @@
+---
+pe_build:
+  version: "3.7.2"
+  download_root: "https://s3.amazonaws.com/pe-builds/released/:version"
+

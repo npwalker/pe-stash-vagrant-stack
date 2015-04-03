@@ -1,0 +1,10 @@
+---
+vms:
+  - name: "puppet-master"
+    box:  "puppetlabs/centos-6.6-64-nocm"
+    roles: [ "hosts", "1gb-memory", "stash", "puppet_master", "customize_pe_via_hiera", "centos", "auto_net" ]
+
+  - name: "stash-server"
+    box:  "puppetlabs/centos-6.6-64-nocm"
+    roles: [ "posix_agent", "puppet_agent", "centos", "1gb-memory" ]
+

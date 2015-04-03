@@ -1,0 +1,8 @@
+.bundle
+.pe_build
+.ruby-version
+.vagrant
+Gemfile.local
+Gemfile.lock
+bin
+src/puppetlabs
