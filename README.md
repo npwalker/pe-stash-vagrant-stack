@@ -24,7 +24,7 @@ The final steps to setup the post receive hook are manual.
  - The command to run is:
    - `/opt/puppet/sbin/stash_mco.rb -k -t https://puppet:puppet@puppet-master:8088/payload`
 4. You can confirm it all works by tailing the webhook logs while pushing a change to your control repo
- - tail -f -n 0 /var/log/webhook/*.log
+ - `tail -f -n 0 /var/log/webhook/*.log`
 
 
 ## Other Notes
