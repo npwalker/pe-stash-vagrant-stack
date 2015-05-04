@@ -60,6 +60,24 @@ node 'stash-server' {
     #dev.mode grants a 24-hour license for testing
     java_opts   => '-Datlassian.dev.mode=true'
   }
+
+  file { '/opt/puppet/sbin/stash_mco.rb':
+    source => 'puppet:///modules/r10k/stash_mco.rb',
+  }
+
+}
+
+node 'puppet-master'{
+
+  class {'r10k::webhook::config':
+    use_mcollective => false,
+  }
+
+  class {'r10k::webhook':
+    user    => 'root',
+    group   => '0',
+    require => Class['r10k::webhook::config'],
+  }
 }
 
 node default {

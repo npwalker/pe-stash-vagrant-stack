@@ -26,6 +26,8 @@ roles:
       - type: shell
         inline: "/opt/puppet/bin/puppet module install puppetlabs-postgresql --version 4.3.0"
       - type: shell
+        inline: "/opt/puppet/bin/puppet module install zack/r10k --version 2.7.3"
+      - type: shell
         inline: "rm -f /etc/puppetlabs/puppet/environments/production/manifests/site.pp; cp /vagrant/puppet_code/site.pp /etc/puppetlabs/puppet/environments/production/manifests/site.pp"
 
   puppet_agent:
