@@ -11,9 +11,21 @@ password: admin
 
 The goal of the stack is to facilitate testing and understanding of how to use setup r10k with stash.  
 
-As I understand it the best way to setup a post-receive hook in stash is to use the following plugin.  You'll have to do that manually for now as I haven't automated it.   
+The stack automates installation of the webhook on the puppet-master with some puppet code in site.pp.  It also places the script that should be run from the stash post receive hook in /opt/puppet/sbin on the stash server.
 
-https://marketplace.atlassian.com/plugins/com.ngs.stash.externalhooks.external-hooks
+The final steps to setup the post receive hook are manual.  
+
+1. Install the following stash plugin
+ - https://marketplace.atlassian.com/plugins/com.ngs.stash.externalhooks.external-hooks
+2.  Make sure your ssh key is setup for root on the puppet master and you've configured it for your stash user
+ - https://confluence.atlassian.com/display/STASH/SSH+user+keys+for+personal+use
+3. Configure a post-receive hook on your control repo
+ - https://confluence.atlassian.com/display/STASH/Using+repository+hooks
+ - The command to run is:
+   - `/opt/puppet/sbin/stash_mco.rb -k -t https://puppet:puppet@puppet-master:8088/payload`
+4. You can confirm it all works by tailing the webhook logs while pushing a change to your control repo
+ - tail -f -n 0 /var/log/webhook/*.log
+
 
 ## Other Notes
 
