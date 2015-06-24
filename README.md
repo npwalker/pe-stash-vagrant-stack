@@ -13,6 +13,15 @@ The goal of the stack is to facilitate testing and understanding of how to use s
 
 The stack automates installation of the webhook on the puppet-master with some puppet code in site.pp.  It also places the script that should be run from the stash post receive hook in /opt/puppet/sbin on the stash server.
 
+If you are attempting to replicate this setup here are the steps that you'll need to complete that this stack takes care of for you. 
+
+1.  Copy this script from the r10k module onto the stash server.  
+  - https://github.com/acidprime/r10k/blob/master/files/stash_mco.rb
+  - I choose to use this file resource to do that for me
+    - https://github.com/npwalker/pe-stash-vagrant-stack/blob/master/puppet_code/site.pp#L64-L65
+2. You'll want to classify your master node with the following code
+  - https://github.com/npwalker/pe-stash-vagrant-stack/blob/master/puppet_code/site.pp#L72-L80
+
 The final steps to setup the post receive hook are manual.  
 
 1. Install the following stash plugin
