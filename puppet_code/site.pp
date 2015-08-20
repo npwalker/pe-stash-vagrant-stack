@@ -40,7 +40,7 @@ File { backup => 'main' }
 node 'stash-server' {
   
   class { 'java' :
-    version => '1.7.0.75-2.5.4.0.el6_6',
+    version => present,
   } -> 
    
   class { 'postgresql::globals':
@@ -56,9 +56,9 @@ node 'stash-server' {
   } ->
 
   class { 'stash':
-    javahome    => '/usr/lib/jvm/java-1.7.0-openjdk-1.7.0.75.x86_64',
+    javahome    => '/etc/alternatives/java_sdk',
     #dev.mode grants a 24-hour license for testing
-    java_opts   => '-Datlassian.dev.mode=true'
+    java_opts   => '-Datlassian.dev.mode=true',
   }
 
   file { '/opt/puppet/sbin/stash_mco.rb':
