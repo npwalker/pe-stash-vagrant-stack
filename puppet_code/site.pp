@@ -39,45 +39,41 @@ File { backup => 'main' }
 
 node 'stash-server' {
   
+  #The bitbucket module uses archive or staging module
+  #which requires unzip but doesn't seem to install it
+  package { 'unzip':
+    ensure => present,
+  }
+  package { 'git' :
+    ensure => present,
+  }
   class { 'java' :
-    version => present,
+    package => 'java-1.8.0-openjdk-devel',
   } -> 
-   
   class { 'postgresql::globals':
     manage_package_repo => true,
     version             => '9.4',
-  }->
+  } ->
   class { 'postgresql::server': } ->
-#  class { 'stash::gc': }
-#  class { 'stash::facts': }
-  postgresql::server::db { 'stash':
-    user     => 'stash',
-    password => postgresql_password('stash', 'password'),
+#  class { 'bitbucket::gc': }
+#  class { 'bitbucket::facts': }
+  postgresql::server::db { 'bitbucket':
+    user     => 'bitbucket',
+    password => postgresql_password('bitbucket', 'password'),
   } ->
 
-  class { 'stash':
+  class { 'bitbucket':
     javahome    => '/etc/alternatives/java_sdk',
     #dev.mode grants a 24-hour license for testing
     java_opts   => '-Datlassian.dev.mode=true',
-  }
-
-  file { '/opt/puppet/sbin/stash_mco.rb':
-    source => 'puppet:///modules/r10k/stash_mco.rb',
+    version     => '4.4.1',
+    require     => [ Package['git', 'unzip'] ]
   }
 
 }
 
 node 'puppet-master'{
 
-  class {'r10k::webhook::config':
-    use_mcollective => false,
-  }
-
-  class {'r10k::webhook':
-    user    => 'root',
-    group   => '0',
-    require => Class['r10k::webhook::config'],
-  }
 }
 
 node default {
