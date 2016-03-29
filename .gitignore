@@ -5,4 +5,5 @@
 Gemfile.local
 Gemfile.lock
 bin
+config/*.yaml
 src/puppetlabs

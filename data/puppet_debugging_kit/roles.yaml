@@ -4,10 +4,64 @@ roles:
   # General Purpose Roles
   # =====================
   base:
-    private_networks:
-      - {auto_network: true}
     provisioners:
-      - {type: hosts}
+      # A generic hosts provisioner is defined here so that networking is one
+      # of the first things configured. Other roles can hook into the
+      # 'base networking' provisioner and override settings.
+      - {type: hosts, name: 'base networking'}
+    providers:
+      - type: virtualbox
+        linked_clone: true
+        overrides:
+          vm_defaults:
+            private_networks:
+              - {auto_network: true}
+            provisioners:
+              - type: hosts
+                name: 'base networking'
+                preserve_order: true
+                sync_hosts: true
+                add_localhost_hostnames: false
+                hosts:
+                  - ['@vagrant_private_networks', ['@vagrant_hostnames']]
+                imports: ['global', 'virtualbox', 'vmware']
+                exports:
+                  virtualbox:
+                    - ['@vagrant_private_networks', ['@vagrant_hostnames']]
+      - type: vmware_fusion
+        overrides:
+          vm_defaults:
+            private_networks:
+              - {auto_network: true}
+            provisioners:
+              - type: hosts
+                name: 'base networking'
+                preserve_order: true
+                sync_hosts: true
+                add_localhost_hostnames: false
+                hosts:
+                  - ['@vagrant_private_networks', ['@vagrant_hostnames']]
+                imports: ['global', 'virtualbox', 'vmware']
+                exports:
+                  vmware:
+                    - ['@vagrant_private_networks', ['@vagrant_hostnames']]
+      - type: vmware_workstation
+        overrides:
+          vm_defaults:
+            private_networks:
+              - {auto_network: true}
+            provisioners:
+              - type: hosts
+                name: 'base networking'
+                preserve_order: true
+                sync_hosts: true
+                add_localhost_hostnames: false
+                hosts:
+                  - ['@vagrant_private_networks', ['@vagrant_hostnames']]
+                imports: ['global', 'virtualbox', 'vmware']
+                exports:
+                  vmware:
+                    - ['@vagrant_private_networks', ['@vagrant_hostnames']]
 
   windows:
     communicator: winrm
@@ -17,8 +71,16 @@ roles:
 
   el-stop-firewall:
     provisioners:
-      - {type: shell, inline: 'service iptables stop'}
-      - {type: shell, inline: 'chkconfig iptables off'}
+      - type: shell
+        inline: |
+          RH_VERS=$(rpm -q --qf "%{VERSION}" $(rpm -q --whatprovides redhat-release))
+          if [ "$RH_VERS" -gt "6" ]; then
+            systemctl stop firewalld.service
+            systemctl disable firewalld.service
+          else
+            service iptables stop
+            chkconfig iptables off
+          fi
 
   # Adds /usr/local/bin to the PATH
   el-fix-path:
@@ -57,25 +119,6 @@ roles:
 
   # Puppet Open Source Roles
   # ========================
-  el-6-repos:
-    depreciated-role: 'Use poss-yum-repos and el-6-epel instead'
-    provisioners:
-      - type: shell
-        inline: |
-          if yum list epel-release > /dev/null 2>&1; then
-            echo 'EPEL repo present.'
-          else
-            echo 'Adding EPEL repos.'
-            rpm -ivh http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
-          fi
-
-          if yum list puppetlabs-release > /dev/null 2>&1; then
-            echo 'PL repos present.'
-          else
-            echo 'Adding PL repos.'
-            rpm -ivh http://yum.puppetlabs.com/el/6/products/i386/puppetlabs-release-6-7.noarch.rpm
-          fi
-
   el-6-epel:
     provisioners:
       - type: shell
@@ -181,6 +224,11 @@ roles:
             apt-get -y -f -m update
           }
 
+  poss-pc1-repos:
+    provisioners:
+      - type: shell
+        path: data/puppet_debugging_kit/files/bootstrap-pc1.sh
+
   poss-envpuppet:
     synced_folders:
       - {host_path: 'src/puppetlabs', guest_path: '/puppetlabs'}
@@ -201,6 +249,44 @@ roles:
 
   # PE Specific Roles
   # =================
+
+  # This role adjusts the default memory usage of PE to run on VMs with 1 GB of
+  # RAM and should always be applied before any provisioner which installs
+  # PE.
+  #
+  # This role requires PE 3.7.2 or newer to function properly.
+  pe-memory-tuning:
+    provisioners:
+      # Upload to /tmp and then use a shell script to copy into place. This
+      # method works with remote machines.
+      - type: file
+        source: 'data/puppet_debugging_kit/files/pe-memory-tuning.yaml'
+        destination: '/tmp/defaults.yaml'
+      - type: shell
+        inline: |-
+          mkdir -p /var/lib/hiera
+          if [ -e /tmp/defaults.yaml ]; then
+            install -m 0644 /tmp/defaults.yaml /var/lib/hiera/
+          fi
+
+  # Exact same as the above role, but for PE 2015.2 and newer.
+  #
+  # I hate this, but if we consolidate it into 1 role, all PE 3.x boxes break
+  # because the installer freaks out if `/etc/puppetlabs` exists.
+  pe-memory-tuning2:
+    provisioners:
+      # Upload to /tmp and then use a shell script to copy into place. This
+      # method works with remote machines.
+      - type: file
+        source: 'data/puppet_debugging_kit/files/pe-memory-tuning.yaml'
+        destination: '/tmp/common.yaml'
+      - type: shell
+        inline: |-
+          mkdir -p /etc/puppetlabs/code/environments/production/hieradata
+          if [ -e /tmp/common.yaml ]; then
+            install -m 0644 /tmp/common.yaml /etc/puppetlabs/code/environments/production/hieradata
+          fi
+
   pe-forward-console:
     forwarded_ports:
       - {guest: 443, host: 4443, auto_correct: true}

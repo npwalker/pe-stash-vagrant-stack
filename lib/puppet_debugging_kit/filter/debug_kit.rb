@@ -50,12 +50,20 @@ class PuppetDebuggingKit::Filter::DebugKit
     # Ensure the VM definition has an array of provisioners
     vm_data['provisioners'] ||= []
 
-    # NOTE: Assumes `pe_bootstrap` is the only provisioner we need to work with
-    # and that there is only one copy of it attached to the machine.
-    index = vm_data['provisioners'].find_index {|p| p['type'] == 'pe_bootstrap'}
+    # NOTE: Assumes `pe_bootstrap` and `pe_agent` are the only provisioners we
+    # need to work with and that there is only one copy attached to the
+    # machine.
+    provisioner = if (role == 'agent') && (version.major.to_i >= 2015)
+      # Used for PE 2015.x and newer since tarball installers are deprecated.
+      'pe_agent'
+    else
+      'pe_bootstrap'
+    end
+
+    index = vm_data['provisioners'].find_index {|p| p['type'] == provisioner}
     if index.nil?
       # No pe_bootstrap provisioner present, add one.
-      vm_data['provisioners'].push puppet_provisioner({'type' => 'pe_bootstrap'}, type, version, role)
+      vm_data['provisioners'].push puppet_provisioner({'type' => provisioner}, type, version, role)
     else
       # Add defaults parsed from the VM name to the existing provisioner.
       vm_data['provisioners'][index] = puppet_provisioner(vm_data['provisioners'][index].dup, type, version, role)
@@ -84,28 +92,39 @@ class PuppetDebuggingKit::Filter::DebugKit
   end
 
   def parse_version(version)
-    # NOTE: We assume that Puppet has no min or max versions that extend into
-    # double digits. So far, this assumption is consistent with history.
-    #
     # TODO: Version will eventually include non-digit things, such as `HEAD` or
     # `nightly`, or `g<SHA>`, so this will need to expand beyond alphanumeric
     # parsing.
     #
     # FIXME: Needs validation and error handling.
-    major, minor, *patch = version.split('')
+    if m = version.match(/(\d+)(\d)(nightly)/) then
+      # Nightly build. Handles both 3x and 2015+
+      major, minor, patch = m[1..-1]
+    elsif m = version.match(/(\d{4})(\d)(\d+)/) then
+      # A 2015.2.0 release or newer.
+      major, minor, patch = m[1..-1]
+    else
+      # Fall back to 2.x/3.x behavior
+      major, minor, *patch = version.split('')
+      patch = patch.join('')
+    end
 
-    # FIXME: Just spitting back the patch here. Could be a number. Could be
-    # something like `nightly`. Need to validate.
-    return Version.new(major, minor, patch.join(''))
+    return Version.new(major, minor, patch)
   end
 
-  # Merges information extracted by this filter into the pe_bootstrap
-  # provisioner. This operation only modifies data where there are no
-  # existing values.
+  # Merges information extracted by this filter into the pe_build provisioners.
+  # This operation only modifies data where there are no existing values.
   #
   # TODO: Currently, only handles the `pe_bootstrap` provisioner. Will
   # eventually need to expand to handle PE nightlies and Puppet Open Source.
   def puppet_provisioner(provisioner, type, version, role)
+    # For PE 2015.x agents.
+    if provisioner['type'] == 'pe_agent'
+      provisioner['master_vm'] ||= "#{type}-#{version.to_s.gsub('.','')}-master"
+      provisioner['version']   ||= (version.patch == 'nightly' ? 'current' : version.to_s)
+      return provisioner
+    end
+
     case version.patch
     when 'nightly'
       # FIXME: This part is going to ge complicated. Re-write as a separate
@@ -123,6 +142,10 @@ class PuppetDebuggingKit::Filter::DebugKit
 
     provisioner['role']    ||= role.intern
     case provisioner['role']
+    when :master
+      # Starting with 2015, we use the pe_agent provisioner which handles
+      # cert signing.
+      provisioner['autosign'] ||= (version.major.to_i < 2015)
     when :agent
       # Set a default master for the agent to talk to.
       provisioner['master'] ||= "#{type}-#{version.to_s.gsub('.','')}-master.puppetdebug.vlan"
