@@ -2,9 +2,9 @@
 vms:
   - name: "puppet-master"
     box:  "puppetlabs/centos-7.2-64-nocm"
-    roles: [ "hosts", "2gb-memory", "stash", "puppet_master", "customize_pe_via_hiera", "centos7", "auto_net" ]
+    roles: [ "hosts", "2gb-memory", "stash", "puppet_master", "customize_pe_via_hiera", "centos", "el-stop-firewall", "auto_net" ]
 
   - name: "stash-server"
     box:  "puppetlabs/centos-7.2-64-nocm"
-    roles: [ "posix_agent", "puppet_agent", "centos7", "2gb-memory", "2_cpus" ]
+    roles: [ "posix_agent", "puppet_agent", "centos", "el-stop-firewall", "2gb-memory", "2_cpus" ]
 
