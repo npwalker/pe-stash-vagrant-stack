@@ -26,6 +26,8 @@ roles:
   stash:
     provisioners:
       - type: shell
+        inline: "/usr/bin/yum install git -y; cd /etc/puppetlabs/code/environments/production/modules; git clone https://github.com/PuppetLabs-RampUpProgram/rampup_profile_bitbucket_server.git"
+      - type: shell
         inline: "/opt/puppetlabs/bin/puppet module install thewired-bitbucket --version 2.0.3"
       - type: shell
         inline: "/opt/puppetlabs/bin/puppet module install puppetlabs-java --version 1.4.3"
